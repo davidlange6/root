@@ -74,6 +74,7 @@
 #endif
 
 #include "TString.h"
+#include "TMVA/MsgLogger.h"
 
 class TList;
 class TTree;
