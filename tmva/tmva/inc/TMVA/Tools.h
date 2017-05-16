@@ -261,8 +261,8 @@ namespace TMVA {
       Bool_t      HasAttr     ( void* node, const char* attrname );
       template<typename T>
          inline void ReadAttr    ( void* node, const char* , T& value );
-      template<>
-         inline void ReadAttr<float>    ( void* node, const char* , float& value );
+      
+      inline void ReadAttr    ( void* node, const char* , float& value );
       void        ReadAttr    ( void* node, const char* attrname, TString& value );
       template<typename T>
          void        AddAttr     ( void* node, const char* , const T& value, Int_t precision = 16 );
@@ -308,7 +308,7 @@ template<typename T> void TMVA::Tools::ReadAttr( void* node, const char* attrnam
    s >> value;
 }
 
-template<> void TMVA::Tools::ReadAttr<float>( void* node, const char* attrname, float& value )
+void TMVA::Tools::ReadAttr( void* node, const char* attrname, float& value )
 {
    // read attribute from xml
    const char* val = xmlengine().GetAttr(node, attrname);
