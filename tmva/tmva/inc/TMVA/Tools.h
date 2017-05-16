@@ -296,9 +296,8 @@ namespace TMVA {
 template<typename T> void TMVA::Tools::ReadAttr( void* node, const char* attrname, T& value )
 {
    // read attribute from xml
-   TString val;
-   ReadAttr( node, attrname, val );
-   std::stringstream s(val.Data());
+   const char* val = xmlengine().GetAttr(node, attrname);
+   std::stringstream s(val);
    // coverity[tainted_data_argument]
    s >> value;
 }
