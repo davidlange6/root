@@ -261,6 +261,8 @@ namespace TMVA {
       Bool_t      HasAttr     ( void* node, const char* attrname );
       template<typename T>
          inline void ReadAttr    ( void* node, const char* , T& value );
+      template<>
+         inline void ReadAttr<float>    ( void* node, const char* , float& value );
       void        ReadAttr    ( void* node, const char* attrname, TString& value );
       template<typename T>
          void        AddAttr     ( void* node, const char* , const T& value, Int_t precision = 16 );
