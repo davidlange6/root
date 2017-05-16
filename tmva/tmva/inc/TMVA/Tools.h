@@ -297,11 +297,25 @@ template<typename T> void TMVA::Tools::ReadAttr( void* node, const char* attrnam
 {
    // read attribute from xml
    const char* val = xmlengine().GetAttr(node, attrname);
+   if ( val == 0 ) {
+      const char * nodename = xmlengine().GetNodeName(node);
+      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" << Endl;
+   }
    std::stringstream s(val);
    // coverity[tainted_data_argument]
    s >> value;
 }
 
+template<> void TMVA::Tools::ReadAttr<float>( void* node, const char* attrname, float& value )
+{
+   // read attribute from xml
+   const char* val = xmlengine().GetAttr(node, attrname);
+   if ( val == 0 ) {
+      const char * nodename = xmlengine().GetNodeName(node);
+      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" << Endl;
+   }
+   value = atof(val);
+}
 
 //_______________________________________________________________________
 template<typename T>
