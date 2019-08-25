@@ -1485,19 +1485,8 @@ static std::string ResolveSymlink(const std::string &path)
    char Buffer[kMAXPATHLEN];
    ssize_t CharCount = ::readlink(path.c_str(), Buffer, sizeof(Buffer));
    // readlink does not append a NUL character to Buffer.
-   if (CharCount > 0) {
-     return std::string(Buffer, Buffer + CharCount);       llvm::StringRef resolved_path(Buffer, CharCount);
-     if (llvm::sys::path::is_absolute(resolved_path))
-       return resolved_path.str();
-
-     // If the symlink did not resolve to an absolute path we should convert
-     // it, because if we are embedded in a framework (such as cmssw) we might
-     // have relocated the files.
-     llvm::SmallString<256> relative_path(resolved_path);
-     llvm::sys::fs::make_absolute(relative_path);
-     return relative_path.str().str();
-   }
-
+   if (CharCount > 0)
+      return std::string(Buffer, Buffer + CharCount);
 
    ::Error("TCling__ResolveSymlink", "Could not resolve symlink '%s'.", path.c_str());
    return {};
