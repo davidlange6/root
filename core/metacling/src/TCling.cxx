@@ -1426,19 +1426,90 @@ void TCling::ShutDown()
    ResetGlobals();
 }
 
-/// Resolve a symlink to its canonical path. If the symlink was relative it
-/// turns it into an absolute path with respect to the original symlink location.
-///
-///\returns the resolved absolute path.
+////////////////////////////////////////////////////////////////////////////////
+/// Wrapper around dladdr (and friends)
+
+static std::string FindLibraryName(void (*func)())
+{
+#if defined(__CYGWIN__) && defined(__GNUC__)
+   return {};
+#elif defined(G__WIN32)
+   MEMORY_BASIC_INFORMATION mbi;
+   if (!VirtualQuery (func, &mbi, sizeof (mbi)))
+   {
+      return {};
+   }
+
+   HMODULE hMod = (HMODULE) mbi.AllocationBase;
+   char moduleName[MAX_PATH];
+
+   if (!GetModuleFileNameA (hMod, moduleName, sizeof (moduleName)))
+   {
+      return {};
+   }
+   return moduleName;
+#else
+   Dl_info info;
+   if (dladdr((void*)func, &info) == 0) {
+      // Not in a known shared library, let's give up
+      return {};
+   } else {
+      if (strchr(info.dli_fname, '/'))
+         return info.dli_fname;
+      // Else absolute path. For all we know that's a binary.
+      // Some people have dictionaries in binaries, this is how we find their path:
+      // (see also https://stackoverflow.com/a/1024937/6182509)
+# if defined(R__MACOSX)
+      char buf[PATH_MAX] = { 0 };
+      uint32_t bufsize = sizeof(buf);
+      if (_NSGetExecutablePath(buf, &bufsize) >= 0)
+         return buf;
+      return info.dli_fname;
+# elif defined(R__UNIX)
+      char buf[PATH_MAX] = { 0 };
+      // Cross our fingers that /proc/self/exe exists.
+      if (readlink("/proc/self/exe", buf, sizeof(buf)) > 0)
+         return buf;
+      std::string pipeCmd = std::string("which \"") + info.dli_fname + "\"";
+      FILE* pipe = popen(pipeCmd.c_str(), "r");
+      if (!pipe)
+         return info.dli_fname;
+      std::string result;
+      while (fgets(buf, sizeof(buf), pipe)) {
+         result += buf;
+      }
+      pclose(pipe);
+      return result;
+# else
+#  error "Unsupported platform."
+# endif
+      return {};
+   }
+#endif
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Helper to initialize TVirtualStreamerInfo's factor early.
+/// Use static initialization to insure only one TStreamerInfo is created.
+static bool R__InitStreamerInfoFactory()
+{
+   // Use lambda since SetFactory return void.
+   auto setFactory = []() {
+      TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
+      return kTRUE;
+   };
+   static bool doneFactory = setFactory();
+   return doneFactory; // avoid unused variable warning.
+}
+
 static std::string ResolveSymlink(const std::string &path)
 {
-   if (!llvm::sys::fs::is_symlink_file(path))
-      return path;
 #ifdef R__WIN32
    // No symlinks on Windows.
    return path;
 #else
-
+   assert(llvm::sys::fs::is_symlink_file(path));
    char Buffer[kMAXPATHLEN];
    ssize_t CharCount = ::readlink(path.c_str(), Buffer, sizeof(Buffer));
    // readlink does not append a NUL character to Buffer.
@@ -1464,83 +1535,6 @@ static std::string ResolveSymlink(const std::string &path)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Wrapper around dladdr (and friends)
-
-static std::string FindLibraryName(void (*func)())
-{
-#if defined(__CYGWIN__) && defined(__GNUC__)
-   return {};
-#elif defined(G__WIN32)
-   MEMORY_BASIC_INFORMATION mbi;
-   if (!VirtualQuery (func, &mbi, sizeof (mbi)))
-   {
-      return {};
-   }
-
-   HMODULE hMod = (HMODULE) mbi.AllocationBase;
-   char moduleName[MAX_PATH];
-
-   if (!GetModuleFileNameA (hMod, moduleName, sizeof (moduleName)))
-   {
-      return {};
-   }
-   return ResolveSymlink(moduleName);
-#else
-   Dl_info info;
-   if (dladdr((void*)func, &info) == 0) {
-      // Not in a known shared library, let's give up
-      return {};
-   } else {
-      if (strchr(info.dli_fname, '/'))
-         return info.dli_fname;
-      // Else absolute path. For all we know that's a binary.
-      // Some people have dictionaries in binaries, this is how we find their path:
-      // (see also https://stackoverflow.com/a/1024937/6182509)
-# if defined(R__MACOSX)
-      char buf[PATH_MAX] = { 0 };
-      uint32_t bufsize = sizeof(buf);
-      if (_NSGetExecutablePath(buf, &bufsize) >= 0)
-         return ResolveSymlink(buf);
-      return ResolveSymlink(info.dli_fname);
-# elif defined(R__UNIX)
-      char buf[PATH_MAX] = { 0 };
-      // Cross our fingers that /proc/self/exe exists.
-      if (readlink("/proc/self/exe", buf, sizeof(buf)) > 0)
-         return ResolveSymlink(buf);
-      std::string pipeCmd = std::string("which \"") + info.dli_fname + "\"";
-      FILE* pipe = popen(pipeCmd.c_str(), "r");
-      if (!pipe)
-         return ResolveSymlink(info.dli_fname);
-      std::string result;
-      while (fgets(buf, sizeof(buf), pipe)) {
-         result += buf;
-      }
-      pclose(pipe);
-      return ResolveSymlink(result);
-# else
-#  error "Unsupported platform."
-# endif
-      return {};
-   }
-#endif
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Helper to initialize TVirtualStreamerInfo's factor early.
-/// Use static initialization to insure only one TStreamerInfo is created.
-static bool R__InitStreamerInfoFactory()
-{
-   // Use lambda since SetFactory return void.
-   auto setFactory = []() {
-      TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
-      return kTRUE;
-   };
-   static bool doneFactory = setFactory();
-   return doneFactory; // avoid unused variable warning.
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Register Rdict data for future loading by LoadPCM;
 
 void TCling::RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llvm::StringRef *pcmContent)
@@ -1553,7 +1547,10 @@ void TCling::RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llv
       return;
    }
 
-   fPendingRdicts[ResolveSymlink(pcmFileNameFullPath)] = *pcmContent;
+   if (llvm::sys::fs::is_symlink_file(pcmFileNameFullPath))
+      fPendingRdicts[ResolveSymlink(pcmFileNameFullPath)] = *pcmContent;
+   else
+      fPendingRdicts[pcmFileNameFullPath] = *pcmContent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
