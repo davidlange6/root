@@ -2189,8 +2189,14 @@ if args['tarball_tag']:
         "https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
             'tarball_tag']).readline().strip().decode(
         'utf-8')
-    fetch_llvm(llvm_revision)
-    fetch_clang(llvm_revision)
+    if is_llvm_binary_compatible() and args["with_binary_llvm"]:
+        compile = compile_for_binary
+        install_prefix = install_prefix_for_binary
+        fetch_clang(llvm_revision)
+        allow_clang_tool()
+    else:
+        fetch_llvm(llvm_revision)
+        fetch_clang(llvm_revision)
     fetch_cling(args['tarball_tag'])
     libcpp = should_fetch_libcpp(llvm_revision)
     if libcpp: fetch_libcpp(llvm_revision, libcpp)
@@ -2209,6 +2215,8 @@ if args['tarball_tag']:
 
     install_prefix()
     if not args['no_test']:
+        if is_llvm_binary_compatible() and args['with_binary_llvm']:
+            build_filecheck()
         test_cling()
     tarball()
     cleanup()
