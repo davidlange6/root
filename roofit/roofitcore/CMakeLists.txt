@@ -374,6 +374,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooMCIntegrator.cxx
     src/RooMCStudy.cxx
     src/RooMinimizer.cxx
+    src/RooCladMinimizerFcn.cxx
     src/RooMinimizerFcn.cxx
     src/RooMoment.cxx
     src/RooMPSentinel.cxx

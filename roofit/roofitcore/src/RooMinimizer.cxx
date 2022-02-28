@@ -50,6 +50,7 @@ automatic PDF optimization.
 #include "RooMsgService.h"
 #include "RooPlot.h"
 #include "RooMinimizerFcn.h"
+#include "RooCladMinimizerFcn.h"
 #include "RooGradMinimizerFcn.h"
 #include "RooFitResult.h"
 #include "TestStatistics/MinuitFcnGrad.h"
@@ -103,6 +104,11 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcn
    switch (_fcnMode) {
    case FcnMode::classic: {
       _fcn = new RooMinimizerFcn(&function, this, _verbose);
+      break;
+   }
+   case FcnMode::clad: {
+      _fcn = new RooCladMinimizerFcn(&function, this, _verbose);
+      setMinimizerType("Minuit2");
       break;
    }
    case FcnMode::gradient: {

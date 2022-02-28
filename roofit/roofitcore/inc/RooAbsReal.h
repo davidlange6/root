@@ -372,6 +372,8 @@ public:
   static void setHideOffset(bool flag);
   static bool hideOffset() ;
 
+  virtual void evaluateGradient(double*) const {}
+
 protected:
   // Hook for objects with normalization-dependent parameters interpretation
   virtual void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) ;
