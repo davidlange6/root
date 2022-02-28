@@ -469,6 +469,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/TestStatistics/LikelihoodWrapper.cxx
     src/TestStatistics/LikelihoodSerial.cxx
     src/TestStatistics/MinuitFcnGrad.cxx
+    src/TestStatistics/MinuitFcnAD.cxx
     src/TestStatistics/RooAbsL.cxx
     src/TestStatistics/RooBinnedL.cxx
     src/TestStatistics/RooSubsidiaryL.cxx

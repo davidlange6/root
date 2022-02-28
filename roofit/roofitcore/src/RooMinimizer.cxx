@@ -54,6 +54,7 @@ automatic PDF optimization.
 #include "RooGradMinimizerFcn.h"
 #include "RooFitResult.h"
 #include "TestStatistics/MinuitFcnGrad.h"
+#include "TestStatistics/MinuitFcnAD.h"
 
 #include "TClass.h"
 #include "Math/Minimizer.h"
@@ -106,13 +107,17 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcn
       _fcn = new RooMinimizerFcn(&function, this, _verbose);
       break;
    }
-   case FcnMode::clad: {
+   case FcnMode::clad_2: {
       _fcn = new RooCladMinimizerFcn(&function, this, _verbose);
       setMinimizerType("Minuit2");
       break;
    }
    case FcnMode::gradient: {
       _fcn = new RooGradMinimizerFcn(&function, this, _verbose);
+      break;
+   }
+   case FcnMode::clad_1 : {
+      _fcn = new RooFit::TestStatistics::MinuitFcnAD(&function, this, _verbose);
       break;
    }
    case FcnMode::generic_wrapper : {

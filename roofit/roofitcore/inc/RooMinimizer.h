@@ -42,7 +42,7 @@ class RooDataSet ;
 
 class RooMinimizer : public TObject {
 public:
-  enum class FcnMode { classic, gradient, generic_wrapper, clad };
+  enum class FcnMode { classic, gradient, generic_wrapper, clad_1, clad_2 };
 
   explicit RooMinimizer(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
   explicit RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood,
