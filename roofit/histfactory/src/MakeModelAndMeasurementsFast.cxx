@@ -16,6 +16,7 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <chrono>
 
 // from root
 #include "TFile.h"
@@ -358,7 +359,13 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   cxcoutPHF << "\n---------------"
     << "\nDoing "<< channel << " Fit"
     << "\n---------------\n\n" << std::endl;
+  auto start = std::chrono::high_resolution_clock::now();
+
   model->fitTo(*simData, Minos(true), PrintLevel(RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG) ? 1 : -1));
+
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(start - stop);
+  std::cout << "that took " << duration.count() << std::endl;
 
   // If there are no parameters of interest,
   // we exit the function here
