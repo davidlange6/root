@@ -373,6 +373,10 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
          << " at " << poi->getVal()<< " high "
          << poi->getErrorLo() << " low "
          << poi->getErrorHi() << std::endl;
+    std::cout << "printing results for " << poi->GetName()
+         << " at " << poi->getVal()<< " high "
+         << poi->getErrorLo() << " low "
+         << poi->getErrorHi() << std::endl;
   }
 
   // But we only make detailed plots and tables
