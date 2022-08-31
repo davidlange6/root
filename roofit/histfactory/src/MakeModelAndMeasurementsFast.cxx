@@ -368,6 +368,7 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   }
 
   // Loop over all POIs and print their fitted values
+  std::cout << "dumping POIs\n";
   for (auto const *poi : static_range_cast<RooRealVar *>(*POIs)) {
     cxcoutIHF << "printing results for " << poi->GetName()
          << " at " << poi->getVal()<< " high "
@@ -378,6 +379,15 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
          << poi->getErrorLo() << " low "
          << poi->getErrorHi() << std::endl;
   }
+
+  std::cout << "dumping POIs plus nuisance \n";
+  for (auto const *poit : static_range_cast<RooRealVar *>(*PoiPlusNuisance)) {
+    std::cout << "printing results for " << poit->GetName()
+         << " at " << poit->getVal()<< " high "
+         << poit->getErrorLo() << " low "
+         << poit->getErrorHi() << std::endl;
+  }
+
 
   // But we only make detailed plots and tables
   // for the 'first' POI
