@@ -381,7 +381,7 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   }
 
   std::cout << "dumping POIs plus nuisance \n";
-  for (auto const *poit : static_range_cast<RooRealVar *>(*PoiPlusNuisance)) {
+  for (auto const *poit : static_range_cast<RooRealVar *>(PoiPlusNuisance)) {
     std::cout << "printing results for " << poit->GetName()
          << " at " << poit->getVal()<< " high "
          << poit->getErrorLo() << " low "
