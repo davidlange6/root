@@ -361,7 +361,8 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
     << "\n---------------\n\n" << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
 
-  model->fitTo(*simData, Minos(true), PrintLevel(RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG) ? 1 : -1));
+  //model->fitTo(*simData, Minos(true), PrintLevel(RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG) ? 1 : -1));
+  model->fitTo(*simData, Minos(true), PrintLevel(1));
 
   auto stop = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::microseconds>(start - stop);
